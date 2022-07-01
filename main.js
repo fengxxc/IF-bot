@@ -1,5 +1,5 @@
 const {Telegraf} = require('telegraf')
-// const SocksAgent = require('socks5-https-client/lib/Agent')
+const { SocksProxyAgent } = require('socks-proxy-agent')
 const HttpsProxyAgent = require('https-proxy-agent')
 const { InkParser } = require('inkjs/compiler/Parser/InkParser')
 const { PosixFileHandler } = require('inkjs/compiler/FileHandler/PosixFileHandler')
@@ -11,12 +11,15 @@ const fs = require('fs')
     socksPort: 1070,
   }); */
 
-const bot = new Telegraf('5402637709:AAEpND6B7JPK23Qz6j5oL7oVxwzMklmPWec', {
+const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN.trim()
+const TG_PROXY = process.env.TG_PROXY.trim()
+console.log("TG_BOT_TOKEN: " + TG_BOT_TOKEN)
+console.log("TG_PROXY: " + TG_PROXY)
+const bot = TG_PROXY ? new Telegraf(TG_BOT_TOKEN, {
     telegram: { 
-        // agent: socksAgent 
-        agent: new HttpsProxyAgent('http://127.0.0.1:1071')
+        agent: TG_PROXY.startsWith('http') ? new HttpsProxyAgent(TG_PROXY) : new SocksProxyAgent(TG_PROXY)
     }
-})
+}) : new Telegraf(TG_BOT_TOKEN)
 
 bot.command('start', ctx => {
     console.log(ctx.from)
