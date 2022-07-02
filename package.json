@@ -2,9 +2,12 @@
   "name": "if-bot",
   "version": "1.0.0",
   "description": "互动小说机器人",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
-    "start": "node main.js",
+    "start": "node --loader ts-node/esm ./src/main.ts",
+    "start:watch": "nodemon -e ts,tsx --exec ts-node ./src/main.ts",
+    "build": "tsc",
+    "lint": "eslint . --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,6 +28,7 @@
   },
   "homepage": "https://github.com/fengxxc/IF-bot#readme",
   "dependencies": {
+    "dotenv": "^16.0.1",
     "https-proxy-agent": "^5.0.1",
     "inkjs": "^2.1.0",
     "socks-proxy-agent": "^7.0.0",
@@ -33,6 +37,10 @@
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
     "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.3",
+    "@typescript-eslint/parser": "^5.30.3",
+    "eslint": "^8.19.0",
+    "nodemon": "^2.0.18",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.4"
   }

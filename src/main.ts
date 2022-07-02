@@ -7,11 +7,8 @@ import { PosixFileHandler } from 'inkjs/compiler/FileHandler/PosixFileHandler'
 import path from 'path'
 import fs from 'fs'
 import { ErrorHandler } from 'inkjs/engine/Error'
-
-/* const socksAgent = new SocksAgent({
-    socksHost: 'localhost',
-    socksPort: 1070,
-  }); */
+// see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import 'dotenv/config' 
 
 const TG_BOT_TOKEN: string | undefined = process.env.TG_BOT_TOKEN?.trim()
 const TG_PROXY: string | undefined = process.env.TG_PROXY?.trim()
