@@ -28,26 +28,11 @@ const bot = TG_PROXY ? new Telegraf<StoryContext>(TG_BOT_TOKEN, {
     }
 }) : new Telegraf<StoryContext>(TG_BOT_TOKEN)
 
-// Login widget events
-bot.on('connected_website', (ctx) => ctx.reply('Website connected'))
-
-// Telegram passport events
-bot.on('passport_data', (ctx) => ctx.reply('Telegram passport connected'))
-
-// session
+// session location
 bot.use((new LocalSession({ database: '.story_states_db.json' })).middleware())
 
-bot.command('start', ctx => {
-    console.log(ctx.from)
-    ctx.replyWithMarkdown(`Hello${ctx.from.first_name}${ctx.from.last_name}, Welcome~ 
-                            \nSend [/list](${ctx.from.username}/list) to see the list of stories.
-                            \nSend [/help](${ctx.from.username}/help) to see the help.
-                            \nSend [/search + <storyName>](${ctx.from.username}/search) to search stories.`)
-    // bot.telegram.sendMessage(ctx.chat.id, 'Hi, This is nice IF bot~')
-})
-
 const saveState = (runtimeStory: RuntimeStory, storyName: string, ctx: StoryContext) => {
-    console.log('Saving state!!!!!!!!!!!!!!!!')
+    // console.log('Saving state!!!!!!!!!!!!!!!!')
     // console.log(ctx.session.storys)
     const savedState: string = runtimeStory?.state.ToJson()
     if (ctx.session.storys === undefined) {
@@ -71,8 +56,9 @@ const loadCustomStateStory = (ctx: StoryContext, storyName: string, restoreState
 bot.action(/.+/, (ctx) => {
     const input = ctx.match[0]
     // type: story | choice | restart
+    // choice: threadIndex_choiceIndex
     const [type, storyName, choice] = input.split(":")
-    console.log(`type: ${type}, storyName: ${storyName}, choice: ${choice}`)
+    // console.log(`type: ${type}, storyName: ${storyName}, choice: ${choice}`)
     if (type == "restart" && ctx.session?.storys?.storyName) {
         delete ctx.session.storys[storyName]
     }
@@ -81,11 +67,11 @@ bot.action(/.+/, (ctx) => {
         ctx.reply(`Story "${storyName}" is not exist`)
         return
     }
-    console.log(`canContinue: ${runtimeStory.canContinue}`)
-    console.log(`tag: ${runtimeStory.currentTags}`)
-    console.log(`currentChoices.length: ${runtimeStory.currentChoices.length}`)
+    // console.log(`canContinue: ${runtimeStory.canContinue}`)
+    // console.log(`tag: ${runtimeStory.currentTags}`)
+    // console.log(`currentChoices.length: ${runtimeStory.currentChoices.length}`)
     if (type == "choice") {
-        console.log(`choice: ${choice}`)
+        // console.log(`choice: ${choice}`)
         const [threadIdx, choiceIdx] = choice.split("_").map(x => parseInt(x))
         // 没有选项或点了之前的选项
         if (choiceIdx >= runtimeStory.currentChoices.length
@@ -99,7 +85,7 @@ bot.action(/.+/, (ctx) => {
     const storyText = runtimeStory.ContinueMaximally() || runtimeStory.currentText || ''
     // const storyText = runtimeStory.ContinueMaximally() || runtimeStory.BuildStringOfContainer(runtimeStory.mainContentContainer) || ''
     saveState(runtimeStory, storyName, ctx)
-    console.log(`storyText: ${storyText}`)
+    // console.log(`storyText: ${storyText}`)
     // 结束情况：点完最后一个选项，返回最后一段故事内容，然后没有选项了
     if (runtimeStory.currentChoices.length == 0) {
         const endText = storyText
@@ -123,12 +109,14 @@ bot.action(/.+/, (ctx) => {
     })
 })
 
-// bot.start((ctx) => ctx.reply('Welcome'))
-bot.help((ctx) => ctx.reply('Send me a sticker'))
-bot.on('sticker', (ctx) => ctx.reply('👍'))
-bot.hears('hi', (ctx) => ctx.reply('Hey there'))
-bot.command('oldschool', (ctx) => ctx.reply('Hello'))
-bot.command('hipster', Telegraf.reply('λ'))
+bot.start(ctx => {
+    // console.log(ctx.from)
+    ctx.replyWithMarkdown(`Hello${ctx.from.first_name}${ctx.from.last_name}, Welcome~ 
+                            \nSend [/list](${ctx.from.username}/list) to see the list of stories.
+                            \nSend [/help](${ctx.from.username}/help) to see the help.
+                            \nSend [/search + <storyName>](${ctx.from.username}/search) to search stories.`)
+})
+// bot.help((ctx) => ctx.reply('TODO...'))
 bot.command('list', (ctx) => {
     ctx.reply("List of Storys: ", {
         reply_markup: {

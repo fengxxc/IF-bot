@@ -12,7 +12,6 @@ export default class StoryUtil {
             text: choice.text,
             callback_data: "choice:" + storyName + ":" + choice.originalThreadIndex + "_" + choice.index
         }))
-        // console.log(choices)
         return choices
     }
 
@@ -22,7 +21,6 @@ export default class StoryUtil {
             storyName += '.ink'
         }
         const inkFireBaseDir = path.join(__dirname, "../ink")
-        console.log(path.join(inkFireBaseDir, storyName))
         return StoryUtil.loadRuntimeStoryFromInkFile(inkFireBaseDir, storyName)
     }
 
@@ -34,7 +32,7 @@ export default class StoryUtil {
         }
         const inkString = fs.readFileSync(filePath, "utf-8");
         const onError: ErrorHandler = (message, errorType) => {
-            console.log(message, errorType)
+            console.error(message, errorType)
         }
         const fileHandler = new PosixFileHandler(inkFireBaseDir)
         const parser = new InkParser(inkString, null, onError, null, fileHandler)
