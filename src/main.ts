@@ -35,11 +35,14 @@ bot.on('connected_website', (ctx) => ctx.reply('Website connected'))
 bot.on('passport_data', (ctx) => ctx.reply('Telegram passport connected'))
 
 // session
-bot.use((new LocalSession({ database: 'story_states_db.json' })).middleware())
+bot.use((new LocalSession({ database: '.story_states_db.json' })).middleware())
 
 bot.command('start', ctx => {
     console.log(ctx.from)
-    ctx.replyWithMarkdown(`Hello, ${ctx.from.first_name} welcome~  </list>`)
+    ctx.replyWithMarkdown(`Hello${ctx.from.first_name}${ctx.from.last_name}, Welcome~ 
+                            \nSend [/list](${ctx.from.username}/list) to see the list of stories.
+                            \nSend [/help](${ctx.from.username}/help) to see the help.
+                            \nSend [/search + <storyName>](${ctx.from.username}/search) to search stories.`)
     // bot.telegram.sendMessage(ctx.chat.id, 'Hi, This is nice IF bot~')
 })
 
@@ -70,12 +73,12 @@ bot.action(/.+/, (ctx) => {
     // type: story | choice | restart
     const [type, storyName, choice] = input.split(":")
     console.log(`type: ${type}, storyName: ${storyName}, choice: ${choice}`)
-    if (type == "restart") {
+    if (type == "restart" && ctx.session?.storys?.storyName) {
         delete ctx.session.storys[storyName]
     }
     const runtimeStory: RuntimeStory|null = loadCustomStateStory(ctx, storyName, type != "restart")
     if (runtimeStory == null) {
-        ctx.reply('Story is null')
+        ctx.reply(`Story "${storyName}" is not exist`)
         return
     }
     console.log(`canContinue: ${runtimeStory.canContinue}`)
@@ -83,7 +86,15 @@ bot.action(/.+/, (ctx) => {
     console.log(`currentChoices.length: ${runtimeStory.currentChoices.length}`)
     if (type == "choice") {
         console.log(`choice: ${choice}`)
-        runtimeStory.ChooseChoiceIndex(parseInt(choice))
+        const [threadIdx, choiceIdx] = choice.split("_").map(x => parseInt(x))
+        // 没有选项或点了之前的选项
+        if (choiceIdx >= runtimeStory.currentChoices.length
+            || runtimeStory.currentChoices[choiceIdx].originalThreadIndex != threadIdx) {
+            // ctx.reply(`Choice ${choiceIdx} is not exist`)
+            ctx.answerCbQuery("Choice is not exist")
+            return
+        }
+        runtimeStory.ChooseChoiceIndex(choiceIdx)
     }
     const storyText = runtimeStory.ContinueMaximally() || runtimeStory.currentText || ''
     // const storyText = runtimeStory.ContinueMaximally() || runtimeStory.BuildStringOfContainer(runtimeStory.mainContentContainer) || ''
@@ -123,7 +134,7 @@ bot.command('list', (ctx) => {
         reply_markup: {
             inline_keyboard: [
                 [{ text: 'tests', callback_data: 'story:tests' }],
-                [{ text: 'xxx', callback_data: 'story:xxx' }],
+                [{ text: 'spam', callback_data: 'story:spam' }],
             ]
         }
     })
