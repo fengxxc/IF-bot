@@ -105,3 +105,6 @@ dist
 
 # session story catch
 .story_states_db.json
+
+# work catch
+.work
