@@ -22,7 +22,7 @@ const bot = TG_PROXY ? new Telegraf<StoryContext>(TG_BOT_TOKEN, {
 }) : new Telegraf<StoryContext>(TG_BOT_TOKEN)
 
 // session location
-bot.use((new LocalSession({ database: '.story_states_db.json' })).middleware())
+bot.use((new LocalSession({ database: '.work/.story_states_db.json' })).middleware())
 
 
 bot.action(/(^choice|^story|^restart):(.+):(.*)/, ctx => {
