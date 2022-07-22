@@ -5,7 +5,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent'
 import 'dotenv/config' 
 import LocalSession from 'telegraf-session-local'
 import StoryContext from './StoryContext'
-import BotAction from './BotAction'
+import BotAction, { Choice } from './BotAction'
 
 const TG_BOT_TOKEN: string | undefined = process.env.TG_BOT_TOKEN?.trim()
 const TG_PROXY: string | undefined = process.env.TG_PROXY?.trim()
@@ -26,9 +26,17 @@ bot.use((new LocalSession({ database: '.work/.story_states_db.json' })).middlewa
 
 
 bot.action(/(^choice|^story|^restart):(.+):(.*)/, ctx => {
-    const [type, storyName, choice] = ctx.match.slice(1)
-    // console.log(`type: ${type}, storyName: ${storyName}, choice: ${choice}`)
+    const [type, storyName, choiceRaw] = ctx.match.slice(1)
+    // console.log(`type: ${type}, storyName: ${storyName}, choiceRaw: ${choiceRaw}`)
+    const choiceRawSpl = choiceRaw.split("_").map(x => parseInt(x))
+    const choice: Choice = { threadIndex: choiceRawSpl[0], index: choiceRawSpl[1] }
     BotAction.inlineKeyboardCallback(ctx, type, storyName, choice)
+})
+
+bot.hears(/> .*/, ctx => {
+    console.log(`hears: ${ctx.message.text}`)
+    // ctx.reply(`you send ${ctx.message.text.slice(2)}`)
+    BotAction.keyboardCallback(ctx, ctx.message.text.slice(2))
 })
 
 bot.start(ctx => {

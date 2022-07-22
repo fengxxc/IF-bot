@@ -7,16 +7,14 @@ import { InkParser } from 'inkjs/compiler/Parser/InkParser'
 import { Story } from 'inkjs'
 
 import Util from './Util'
+import { Markup } from 'telegraf'
 
 export default class StoryUtil {
     static INK_FIRE_BASE_DIR = path.join(__dirname, "../ink")
     static CACHE_FIRE_BASE_DIR = path.join(__dirname, "../.work/cache")
 
     static getChoicesInlineKeyboard(runtimeStory: RuntimeStory, storyName: string) {
-        const choices = runtimeStory.currentChoices.map(choice => ({
-            text: choice.text,
-            callback_data: "choice:" + storyName + ":" + choice.originalThreadIndex + "_" + choice.index
-        }))
+        const choices = runtimeStory.currentChoices.map(choice => Markup.button.callback(choice.text, "choice:" + storyName + ":" + choice.originalThreadIndex + "_" + choice.index))
         return choices
     }
 

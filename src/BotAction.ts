@@ -1,12 +1,20 @@
 import { Story as RuntimeStory } from 'inkjs/engine/Story'
+import { BoolValue } from 'inkjs/engine/Value'
+import { Markup } from 'telegraf'
+import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
 import StoryContext from './StoryContext'
 import StoryUtil from './StoryUtil'
+import Const from "./Const";
 
+export interface Choice {
+    threadIndex?: number
+    index?: number
+    text?: string
+}
 
 export default class BotAction {
+
     private static saveState(runtimeStory: RuntimeStory, storyName: string, ctx: StoryContext) {
-        // console.log('Saving state!!!!!!!!!!!!!!!!')
-        // console.log(ctx.session.storys)
         const savedState: string = runtimeStory?.state.ToJson()
         if (ctx.session.storys === undefined) {
             ctx.session.storys = {}
@@ -26,9 +34,19 @@ export default class BotAction {
         return story
     }
 
-    static inlineKeyboardCallback(ctx: StoryContext, type: string, storyName: string, choice?: string) {
+    static keyboardCallback(ctx: StoryContext, text: string) {
+        const type = "choice"
+        const storyName = ctx.session.currentStory
+        const choice: Choice = { text: text}
+        BotAction.inlineKeyboardCallback(ctx, type, storyName, choice)
+    }
+
+    static inlineKeyboardCallback(ctx: StoryContext, type: string, storyName: string, choice?: Choice) {
         // type: story | choice | restart
         // choice: threadIndex_choiceIndex
+        if (type == "story") {
+            ctx.session.currentStory = storyName
+        }
         if (type == "restart" && ctx.session?.storys?.storyName) {
             delete ctx.session.storys[storyName]
         }
@@ -39,15 +57,17 @@ export default class BotAction {
         }
         // console.log(`canContinue: ${runtimeStory.canContinue}`)
         // console.log(`tag: ${runtimeStory.currentTags}`)
-        // console.log(`currentChoices.length: ${runtimeStory.currentChoices.length}`)
         if (type == "choice" && choice) {
-            // console.log(`choice: ${choice}`)
-            const [threadIdx, choiceIdx] = choice.split("_").map(x => parseInt(x))
-            // 没有选项或点了之前的选项
-            if (choiceIdx >= runtimeStory.currentChoices.length
-                || runtimeStory.currentChoices[choiceIdx].originalThreadIndex != threadIdx) {
+            let choiceIdx = choice.index
+            choiceIdx = choiceIdx || runtimeStory.currentChoices.findIndex(x => x.text == choice.text) || -1
+            // console.log(`choiceIdx: ${choiceIdx}`)
+            if (choiceIdx < 0 || choiceIdx >= runtimeStory.currentChoices.length) {
                 ctx.answerCbQuery("Choice is not exist")
                 return
+            }
+            if (choice.threadIndex && runtimeStory.currentChoices[choiceIdx].originalThreadIndex != choice.threadIndex) {
+                ctx.answerCbQuery("You was choosed this choice before")
+                return 
             }
             runtimeStory.ChooseChoiceIndex(choiceIdx)
         }
@@ -58,23 +78,30 @@ export default class BotAction {
         // 结束情况：点完最后一个选项，返回最后一段故事内容，然后没有选项了
         if (runtimeStory.currentChoices.length == 0) {
             const endText = storyText
-            ctx.reply(endText + "\n - End -", {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'Restart this story', callback_data: `restart:${storyName}:`}]
-                    ]
-                }
-            })
+            BotAction.replyEnd(ctx, storyName, endText)
             return
         }
         // console.log("BuildStringOfHierarchy: " + runtimeStory.BuildStringOfHierarchy())
         const choices = StoryUtil.getChoicesInlineKeyboard(runtimeStory, storyName)
-        ctx.reply(storyText, {
-            reply_markup: {
-                inline_keyboard: [
-                    choices
-                ]
-            }
+        const inline: boolean = (runtimeStory.variablesState.GetVariableWithName(Const.TG_CHOICE_INLINE) as BoolValue).isTruthy
+        BotAction.replyContentAndChoices(ctx, storyText, choices, inline)
+    }
+
+    static async replyContentAndChoices(ctx: StoryContext, text: string, choices: { text: string; callback_data: string; }[], inline = true) {
+        let markup: Markup.Markup<InlineKeyboardMarkup> | Markup.Markup<ReplyKeyboardMarkup>
+        if (inline) {
+            markup = Markup.inlineKeyboard([choices])
+        } else {
+            choices = choices.map(x => {x.text = "> "+x.text; return x})
+            markup = Markup.keyboard(choices).oneTime().resize()
+        }
+        return await ctx.replyWithMarkdown(text, {
+            parse_mode: 'Markdown',
+            ...markup
         })
+    }
+
+    static replyEnd(ctx: StoryContext, storyName: string, text: string) {
+        BotAction.replyContentAndChoices(ctx, text + "\n - End -", [Markup.button.callback('Restart this story', `restart:${storyName}:`)])
     }
 }
