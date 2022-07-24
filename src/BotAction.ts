@@ -83,7 +83,7 @@ export default class BotAction {
         }
         // console.log("BuildStringOfHierarchy: " + runtimeStory.BuildStringOfHierarchy())
         const choices = StoryUtil.getChoicesInlineKeyboard(runtimeStory, storyName)
-        const inline: boolean = (runtimeStory.variablesState.GetVariableWithName(Const.TG_CHOICE_INLINE) as BoolValue).isTruthy
+        const inline: boolean = ((runtimeStory.variablesState.GetVariableWithName(Const.TG_CHOICE_INLINE) || true) as BoolValue).isTruthy
         BotAction.replyContentAndChoices(ctx, storyText, choices, inline)
     }
 
