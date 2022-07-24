@@ -53,6 +53,7 @@ bot.command('list', (ctx) => {
             inline_keyboard: [
                 [{ text: 'tests', callback_data: 'story:tests:' }],
                 [{ text: 'spam', callback_data: 'story:spam:' }],
+                [{ text: 'yiyu', callback_data: 'story:抑郁自评量表（SDS）:' }],
             ]
         }
     })
