@@ -1,7 +1,7 @@
 import { Story as RuntimeStory } from 'inkjs/engine/Story'
 import { BoolValue } from 'inkjs/engine/Value'
 import { Markup } from 'telegraf'
-import { InlineKeyboardMarkup, ReplyKeyboardMarkup } from 'telegraf/typings/core/types/typegram'
+import { InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove } from 'telegraf/typings/core/types/typegram'
 import StoryContext from './StoryContext'
 import StoryUtil from './StoryUtil'
 import Const from "./Const";
@@ -62,7 +62,7 @@ export default class BotAction {
             choiceIdx = choiceIdx || runtimeStory.currentChoices.findIndex(x => x.text == choice.text) || -1
             // console.log(`choiceIdx: ${choiceIdx}`)
             if (choiceIdx < 0 || choiceIdx >= runtimeStory.currentChoices.length) {
-                ctx.answerCbQuery("Choice is not exist")
+                ctx.answerCbQuery("Choice is not exist").catch()
                 return
             }
             if (choice.threadIndex && runtimeStory.currentChoices[choiceIdx].originalThreadIndex != choice.threadIndex) {
@@ -88,12 +88,19 @@ export default class BotAction {
     }
 
     static async replyContentAndChoices(ctx: StoryContext, text: string, choices: { text: string; callback_data: string; }[], inline = true) {
-        let markup: Markup.Markup<InlineKeyboardMarkup> | Markup.Markup<ReplyKeyboardMarkup>
+        let markup: Markup.Markup<InlineKeyboardMarkup> | Markup.Markup<ReplyKeyboardMarkup> | Markup.Markup<ReplyKeyboardRemove>
         if (inline) {
+            if (ctx.session.keyboardOpen) {
+                markup = Markup.removeKeyboard()
+                const rm = await ctx.reply("change to inline keyboard...", Markup.removeKeyboard())
+                await ctx.deleteMessage(rm.message_id)
+                ctx.session.keyboardOpen = false
+            }
             markup = Markup.inlineKeyboard([choices])
         } else {
             choices = choices.map(x => {x.text = "> "+x.text; return x})
             markup = Markup.keyboard(choices).oneTime().resize()
+            ctx.session.keyboardOpen = true
         }
         return await ctx.replyWithMarkdown(text, {
             parse_mode: 'Markdown',
