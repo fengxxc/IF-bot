@@ -58,8 +58,8 @@ export default class BotAction {
         // console.log(`canContinue: ${runtimeStory.canContinue}`)
         // console.log(`tag: ${runtimeStory.currentTags}`)
         if (type == "choice" && choice) {
-            let choiceIdx = choice.index
-            choiceIdx = choiceIdx || runtimeStory.currentChoices.findIndex(x => x.text == choice.text) || -1
+            const choiceIdx = choice.index == undefined ? runtimeStory.currentChoices.findIndex(x => x.text == choice.text)
+                                                        : choice.index
             // console.log(`choiceIdx: ${choiceIdx}`)
             if (choiceIdx < 0 || choiceIdx >= runtimeStory.currentChoices.length) {
                 ctx.answerCbQuery("Choice is not exist").catch()
