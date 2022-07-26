@@ -3,35 +3,28 @@ import path from "path";
 import crypto from "crypto";
 
 export default class Util {
-    static emptyDir(rootPath: string) {
+    static dirDFS(rootPath: string, fileCallback: (filePath: string, isDir: boolean) => void): void {
         if (fs.existsSync(rootPath)) {
             const files = fs.readdirSync(rootPath)
             files.forEach((file) => {
                 const filePath = path.join(rootPath, file)
                 const states = fs.statSync(filePath)
                 if (states.isDirectory()) {
-                    Util.removeDir(filePath)
+                    Util.dirDFS(filePath, fileCallback)
                 } else {
-                    fs.unlinkSync(filePath)
+                    fileCallback(filePath, false)
                 }
             })
+            fileCallback(rootPath, true)
         }
     }
 
+    static emptyDir(rootPath: string) {
+        Util.dirDFS(rootPath, (filePath, isDir) => !isDir ? fs.unlinkSync(filePath) : (filePath !== rootPath)? fs.rmdirSync(filePath) : null)
+    }
+
     static removeDir(rootPath: string) {
-        if (fs.existsSync(rootPath)) {
-            const files = fs.readdirSync(rootPath)
-            files.forEach((file) => {
-                const filePath = path.join(rootPath, file)
-                const states = fs.statSync(filePath)
-                if (states.isDirectory()) {
-                    Util.removeDir(filePath)
-                } else {
-                    fs.unlinkSync(filePath)
-                }
-            })
-            fs.rmdirSync(rootPath)
-        }
+        Util.dirDFS(rootPath, (filePath, isDir) => isDir ? fs.rmdirSync(filePath) : fs.unlinkSync(filePath))
     }
 
     static getStringHash(str: string): string {
