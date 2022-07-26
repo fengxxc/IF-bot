@@ -35,7 +35,7 @@ export default class StoryUtil {
         if (fs.existsSync(path.join(StoryUtil.CACHE_FIRE_BASE_DIR, storyName, originalHash + '.json'))) {
             // No changed, load cache
             const runtimeStory = StoryUtil.loadRuntimeStoryFromJsonFile(path.join(StoryUtil.CACHE_FIRE_BASE_DIR, storyName, originalHash + '.json'))
-            console.log(`load from cache: ${storyName}`)
+            // console.log(`load from cache: ${storyName}`)
             return runtimeStory
         }
         // changed, remove cache

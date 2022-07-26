@@ -61,12 +61,14 @@ export default class BotAction {
             const choiceIdx = choice.index == undefined ? runtimeStory.currentChoices.findIndex(x => x.text == choice.text)
                                                         : choice.index
             // console.log(`choiceIdx: ${choiceIdx}`)
-            if (choiceIdx < 0 || choiceIdx >= runtimeStory.currentChoices.length) {
-                ctx.answerCbQuery("Choice is not exist").catch()
+            if (!ctx.session.keyboardOpen && 
+                (choiceIdx < 0 || choiceIdx >= runtimeStory.currentChoices.length)
+            ) {
+                ctx.answerCbQuery("Choice is not exist").catch( (err: TypeError) => console.log(err.message))
                 return
             }
             if (choice.threadIndex && runtimeStory.currentChoices[choiceIdx].originalThreadIndex != choice.threadIndex) {
-                ctx.answerCbQuery("You was choosed this choice before")
+                ctx.answerCbQuery("You was choosed this choice before").catch( (err: TypeError) => console.log(err.message))
                 return 
             }
             runtimeStory.ChooseChoiceIndex(choiceIdx)
@@ -84,15 +86,16 @@ export default class BotAction {
         // console.log("BuildStringOfHierarchy: " + runtimeStory.BuildStringOfHierarchy())
         const choices = StoryUtil.getChoicesInlineKeyboard(runtimeStory, storyName)
         const inline: boolean = ((runtimeStory.variablesState.GetVariableWithName(Const.TG_CHOICE_INLINE) || true) as BoolValue).isTruthy
-        BotAction.replyContentAndChoices(ctx, storyText, choices, inline)
+        const newPost: boolean = ((runtimeStory.variablesState.GetVariableWithName(Const.TG_NEW_POST) || true) as BoolValue).isTruthy
+        BotAction.replyContentAndChoices(ctx, storyText, choices, inline, !newPost)
     }
 
-    static async replyContentAndChoices(ctx: StoryContext, text: string, choices: { text: string; callback_data: string; }[], inline = true) {
+    static async replyContentAndChoices(ctx: StoryContext, text: string, choices: { text: string; callback_data: string; }[], inline = true, edit = false) {
         let markup: Markup.Markup<InlineKeyboardMarkup> | Markup.Markup<ReplyKeyboardMarkup> | Markup.Markup<ReplyKeyboardRemove>
         if (inline) {
             if (ctx.session.keyboardOpen) {
                 markup = Markup.removeKeyboard()
-                const rm = await ctx.reply("change to inline keyboard...", Markup.removeKeyboard())
+                const rm = await ctx.reply("Turn to inline keyboard...", Markup.removeKeyboard())
                 await ctx.deleteMessage(rm.message_id)
                 ctx.session.keyboardOpen = false
             }
@@ -101,6 +104,10 @@ export default class BotAction {
             choices = choices.map(x => {x.text = "> "+x.text; return x})
             markup = Markup.keyboard(choices).oneTime().resize()
             ctx.session.keyboardOpen = true
+        }
+        if (inline && edit) {
+            return ctx.editMessageText(text,  Markup.inlineKeyboard([choices]))
+            // return ctx.editMessageText(text,  markup.reply_markup)
         }
         return await ctx.replyWithMarkdown(text, {
             parse_mode: 'Markdown',

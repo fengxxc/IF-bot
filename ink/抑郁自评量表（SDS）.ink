@@ -1,7 +1,8 @@
 VAR SCORE = 0
+VAR TG_NEW_POST = true
 
 抑郁自评量表（SDS）
-(from: https://zhuanlan.zhihu.com/p/89890455)
+(from: https:\/\/zhuanlan.zhihu.com/p/89890455)
 
 量表介绍：
 抑郁自评量表(Self—Rating Depression Scale，SDS)由Zung编制于1965年。为美国教育卫生福利部推荐的用于精神药理学研究的量表之一，因使用简便，应用颇广
@@ -13,9 +14,12 @@ VAR SCORE = 0
 ③“经常”表示至少4-5天会出现类似情况；
 ④“持续”表示几乎每天都会出现类似情况。
 
-测试开始：
++ [开始测试]
+    -> start
+=== start ===
 -
 1、我觉得闷闷不乐，情绪低沉
+~ TG_NEW_POST = false
 + [①很少]
     ~ SCORE = SCORE + 1
 + [②有时]
