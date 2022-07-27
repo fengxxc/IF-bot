@@ -1,5 +1,4 @@
 import { Story as RuntimeStory } from 'inkjs/engine/Story'
-import { BoolValue } from 'inkjs/engine/Value'
 import { Markup } from 'telegraf'
 import { InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove } from 'telegraf/typings/core/types/typegram'
 import StoryContext from './StoryContext'
@@ -85,8 +84,9 @@ export default class BotAction {
         }
         // console.log("BuildStringOfHierarchy: " + runtimeStory.BuildStringOfHierarchy())
         const choices = StoryUtil.getChoicesInlineKeyboard(runtimeStory, storyName)
-        const inline: boolean = ((runtimeStory.variablesState.GetVariableWithName(Const.TG_CHOICE_INLINE) || true) as BoolValue).isTruthy
-        const newPost: boolean = ((runtimeStory.variablesState.GetVariableWithName(Const.TG_NEW_POST) || true) as BoolValue).isTruthy
+        const inline: boolean = StoryUtil.getStateVAR<boolean>(runtimeStory, Const.TG_CHOICE_INLINE, true)
+        const newPost: boolean = StoryUtil.getStateVAR<boolean>(runtimeStory, Const.TG_NEW_POST, true)
+        // console.log(`inline: ${inline}; newPost: ${newPost}`)
         BotAction.replyContentAndChoices(ctx, storyText, choices, inline, !newPost)
     }
 

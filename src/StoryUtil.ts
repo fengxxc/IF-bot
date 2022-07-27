@@ -8,10 +8,19 @@ import { Story } from 'inkjs'
 
 import Util from './Util'
 import { Markup } from 'telegraf'
+import { Value } from 'inkjs/engine/Value'
 
 export default class StoryUtil {
     static INK_FIRE_BASE_DIR = path.join(__dirname, "../ink")
     static CACHE_FIRE_BASE_DIR = path.join(__dirname, "../.work/cache")
+
+    static getStateVAR<T extends boolean | number | string>(story: RuntimeStory, name: string, defVal: T): T {
+        const o = story.variablesState.GetVariableWithName(name) as Value<T>
+        if (o === undefined || o === null || o.valueObject === null) {
+            return <T>defVal
+        }
+        return o.valueObject
+    }
 
     static getChoicesInlineKeyboard(runtimeStory: RuntimeStory, storyName: string) {
         const choices = runtimeStory.currentChoices.map(choice => Markup.button.callback(choice.text, "choice:" + storyName + ":" + choice.originalThreadIndex + "_" + choice.index))
