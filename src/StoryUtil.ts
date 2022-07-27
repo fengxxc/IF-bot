@@ -22,6 +22,20 @@ export default class StoryUtil {
         return o.valueObject
     }
 
+    static listStory(): string[] {
+        const res: string[] = []
+        const rootPath = StoryUtil.INK_FIRE_BASE_DIR
+        const files = fs.readdirSync(rootPath)
+        files.forEach((file) => {
+            const filePath = path.join(rootPath, file)
+            const states = fs.statSync(filePath)
+            if (!states.isDirectory()) {
+                res.push(file.replace(/\.(ink|json)/, ""))
+            }
+        })
+        return res
+    }
+
     static getChoicesInlineKeyboard(runtimeStory: RuntimeStory, storyName: string) {
         const choices = runtimeStory.currentChoices.map(choice => Markup.button.callback(choice.text, "choice:" + storyName + ":" + choice.originalThreadIndex + "_" + choice.index))
         return choices

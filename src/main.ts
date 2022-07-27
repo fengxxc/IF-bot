@@ -6,6 +6,7 @@ import 'dotenv/config'
 import LocalSession from 'telegraf-session-local'
 import StoryContext from './StoryContext'
 import BotAction, { Choice } from './BotAction'
+import StoryUtil from './StoryUtil'
 
 const TG_BOT_TOKEN: string | undefined = process.env.TG_BOT_TOKEN?.trim()
 const TG_PROXY: string | undefined = process.env.TG_PROXY?.trim()
@@ -41,23 +42,22 @@ bot.hears(/> .*/, ctx => {
 
 bot.start(ctx => {
     // console.log(ctx.from)
-    ctx.replyWithMarkdown(`Hello${ctx.from.first_name}${ctx.from.last_name}, Welcome~ 
-                            \nSend [/list](${ctx.from.username}/list) to see the list of stories.
-                            \nSend [/help](${ctx.from.username}/help) to see the help.
-                            \nSend [/search + <storyName>](${ctx.from.username}/search) to search stories.`)
+    console.log(ctx.message.text)
+    const spaceIdx = ctx.message.text.indexOf(" ")
+    if (spaceIdx < 0) {
+        return ctx.replyWithMarkdown(`Hello ${ctx.from.first_name}${ctx.from.last_name}, Welcome~ 
+                    \nSend [/list](${ctx.from.username}/list) to see the list of stories.
+                    \nSend [/help](${ctx.from.username}/help) to see the help.
+                    \nSend [/search + <storyName>](${ctx.from.username}/search) to search stories.`)
+    }
+    const storyName = ctx.message.text.replace("/start ", "")
+    BotAction.inlineKeyboardCallback(ctx, "story", storyName, undefined)
 })
 // bot.help((ctx) => ctx.reply('TODO...'))
 bot.command('list', (ctx) => {
-    ctx.reply("List of Storys: ", {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'tests', callback_data: 'story:tests:' }],
-                [{ text: 'spam', callback_data: 'story:spam:' }],
-                [{ text: 'yiyu', callback_data: 'story:抑郁自评量表（SDS）:' }],
-            ]
-        }
-    })
-    // ctx.replyWithMarkdown('*bold* _italic_ `fixed-width`')
+    const storyList: string[] = StoryUtil.listStory()
+    const replyContent: string = "List of Storys: \n" + storyList.map(story => `[${story}](https://t.me/nice_if_bot?start=${story})`).join("\n")
+    ctx.replyWithMarkdown(replyContent)
 })
 bot.launch();
 
